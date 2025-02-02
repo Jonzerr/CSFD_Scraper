@@ -1,67 +1,29 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import time
-import requests
-from bs4 import BeautifulSoup
 import csv
 import os
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from app.login import login_and_get_cookies
+from app.login import create_session_with_cookies
+
 
 # 🔹 Načítanie .env súboru
 load_dotenv()
 
 # 🔑 Použitie premenných z .env
-USERNAME = os.getenv("CSFD_USERNAME")
-PASSWORD = os.getenv("CSFD_PASSWORD")
 USER_ID = os.getenv("CSFD_USER_ID")
 
 
 # URL adresy
-LOGIN_URL = "https://www.csfd.cz/prihlaseni/"
-BASE_URL = f"https://www.csfd.cz/uzivatel/{USER_ID}/hodnoceni/?type=0"
+BASE_URL = f"https://www.csfd.cz/uzivatel/{USER_ID}/hodnoceni/?type=0&sort=rating" # type=0 - filmy, 
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
-# 🔹 1️⃣ Prihlásenie cez Selenium a získanie cookies
-def login_and_get_cookies():
-    from selenium.webdriver.chrome.service import Service
-    from webdriver_manager.chrome import ChromeDriverManager
+# 🔹 1️⃣Použitie cookies v Requests.Session()
 
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Skryje prehliadač
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    driver.get(LOGIN_URL)
-    time.sleep(2)
-
-    driver.find_element(By.NAME, "username").send_keys(USERNAME)
-    driver.find_element(By.NAME, "password").send_keys(PASSWORD)
-    driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
-
-    time.sleep(2)  # Počkáme, kým sa načíta stránka
-
-    if "Odhlásit" in driver.page_source:
-        print("✅ Prihlásenie úspešné!")
-    else:
-        print("❌ Prihlásenie zlyhalo!")
-        driver.quit()
-        return None
-
-    cookies = driver.get_cookies()  # Získame cookies
-    driver.quit()
-    return cookies
-
-# 🔹 2️⃣ Použitie cookies v Requests.Session()
-def create_session_with_cookies(cookies):
-    session = requests.Session()
-    for cookie in cookies:
-        session.cookies.set(cookie["name"], cookie["value"])
-    return session
-
-# 🔹 3️⃣ Funkcia na sťahovanie filmov zo stránky hodnotení
+# 🔹 2️⃣ Funkcia na sťahovanie filmov zo stránky hodnotení
 def get_ratings(session, page=1):
     url = f"{BASE_URL}&page={page}"
     response = session.get(url, headers=HEADERS)
@@ -92,7 +54,7 @@ def get_ratings(session, page=1):
 
     return movies
 
-# 🔹 4️⃣ Stiahnutie všetkých hodnotení
+# 🔹 3️⃣ Stiahnutie všetkých hodnotení
 def get_all_ratings(session):
     all_ratings = []
     page = 1
@@ -109,7 +71,7 @@ def get_all_ratings(session):
 
     return all_ratings
 
-# 🔹 5️⃣ Uloženie dát do CSV
+# 🔹 4️⃣ Uloženie dát do CSV
 def save_to_csv(movies, filename="movies_ratings.csv"):
     with open(filename, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=["title", "year", "rating"])
@@ -119,8 +81,12 @@ def save_to_csv(movies, filename="movies_ratings.csv"):
     print(f"✅ Dáta boli uložené do súboru {filename}")
 
 # ✅ Spustenie procesu
-cookies = login_and_get_cookies()
-if cookies:
-    session = create_session_with_cookies(cookies)
-    ratings = get_all_ratings(session)
-    save_to_csv(ratings)
+def main():
+    cookies = login_and_get_cookies()
+    if cookies:
+        session = create_session_with_cookies(cookies)
+        ratings = get_all_ratings(session)
+        save_to_csv(ratings)
+
+if __name__ == "__main__":
+    main()
