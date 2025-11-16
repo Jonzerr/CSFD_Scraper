@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from app.login import login_and_get_cookies, create_session_with_cookies
 
 # 🔹 Základné nastavenia
-WATCHLIST_URL = "https://www.csfd.cz/soukrome/chci-videt/?filmType=0"
+WATCHLIST_URL = "https://www.csfd.cz/soukrome/chci-videt/?filmType=1"  #?filmType=0
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 # 🔹 1️⃣ Stiahni zoznam filmov z "Chci vidět"
@@ -17,7 +17,8 @@ def get_watchlist(session):
     previous_titles = []
 
     while True:
-        url = f"{WATCHLIST_URL}&page={page}"
+        url = f"{WATCHLIST_URL}?page={page}"    #pokial bude zapnute filmType=0, treba dat znak & namisto ?
+        print(url)
         response = session.get(url, headers=HEADERS)
         time.sleep(0.5)  # Prevencia proti rate-limitingu
 
@@ -121,3 +122,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

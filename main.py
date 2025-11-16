@@ -14,7 +14,7 @@ USER_ID = os.getenv("CSFD_USER_ID")
 
 
 # URL adresy
-BASE_URL = f"https://www.csfd.cz/uzivatel/{USER_ID}/hodnoceni/?type=0&sort=rating" # type=0 - filmy, 
+BASE_URL = f"https://www.csfd.cz/uzivatel/{USER_ID}/hodnoceni/?type=0&sort=rating" # type=0 - filmy, type=3 - serial
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
